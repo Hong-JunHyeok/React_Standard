@@ -126,3 +126,76 @@ JSX 내부의 중괄호 안에 어떤 JavaScript 표현식도 사용할 수 있�
 
 
 ## Props를 통해 데이터 전달하기
+
+> ### ⚠️여러분은 예제 사이트(미완성 된 코드)에서 내용을 추가하면 됩니다.
+
+**코드를 절대로! 복사 붙여넣기 하지 마세요! 그냥 따라치면서 익힙시다.**
+
+Square에 value prop을 전달하기 위해 Board의 renderSquare함수 코드를 작성해봅시다.
+
+```js
+class Board extends React.Component {
+  renderSquare(i) {
+    return <Square value={i} />;
+  }
+}
+``` 
+
+이제 값을 표시하기 위해 render함수에서 {this.props.value}를 추가해줍시다!
+
+```js
+class Square extends React.Component {
+  render() {
+    return (
+      <button className="square">
+        {this.props.value}
+      </button>
+    );
+  }
+}
+```
+
+![image](https://user-images.githubusercontent.com/48292190/116555543-7c619f00-a937-11eb-860e-a01b45d9ffe4.png)
+
+그럼 다음과 같이 각 Square에 value가 잘 전달된것을 볼 수 있습니다!
+
+이제 Props의 전달입니다! 
+
+`Board`컴포넌트에서 -> `Square`컴포넌트로 **부모 컴포넌트에서 자식 컴포넌트로** 값을 전달한것이지요!
+
+## 사용자와 상호작용 하는 컴포넌트 만들기
+
+`Square`컴포넌트를 클릭하면 "X"가 체크되도록 해보겠습니다!
+
+그러면 `click`했을때에 어떠한 동작을 해주어야겠죠?
+
+어떻게 하는지 보도록 하겠습니다.
+
+```js
+class Square extends React.Component {
+  render() {
+    return (
+      <button className="square" onClick={() => {
+          alert("click");
+        }}>
+        {this.props.value}
+      </button>
+    );
+  }
+}
+```
+
+`onClick`이라는 속성을 button컴포넌트에 주도록 합시다.
+
+그러면 함수를 받게되는데 그때 alert하는 로직을 작성해주게 되는겁니다.
+
+그렇게 어려운 내용은 아니지요?
+
+Square 컴포넌트를 클릭한 것을 **“기억하게”** 만들어 “X” 표시를 채워 넣으려고 합니다.
+
+음...**"기억하게"**라고 하니까 감이 안오죠?
+
+무언가를 “기억하기”위해 component는 **state**를 사용합니다.
+
+새로운 개념이 나왔습니다! **state**
+
