@@ -84,9 +84,11 @@ export default ShoppingList;
 다음과 같이 동작합니다.
 
 ```js
-return React.createElement('div', {className: 'shopping-list'},
-  React.createElement('h1', /* ... h1 children ... */),
-  React.createElement('ul', /* ... ul children ... */)
+return React.createElement(
+  "div",
+  { className: "shopping-list" },
+  React.createElement("h1" /* ... h1 children ... */),
+  React.createElement("ul" /* ... ul children ... */)
 );
 ```
 
@@ -96,7 +98,7 @@ return React.createElement('div', {className: 'shopping-list'},
 
 😊 결국엔 리액트도 JS라는게 다시하번 느껴지죠?
 
-JSX 내부의 중괄호 안에 어떤 JavaScript 표현식도 사용할 수 있습니다. 
+JSX 내부의 중괄호 안에 어떤 JavaScript 표현식도 사용할 수 있습니다.
 
 무슨말인지 자세히 알아보도록 할까요?
 
@@ -109,21 +111,22 @@ JSX 내부의 중괄호 안에 어떤 JavaScript 표현식도 사용할 수 있�
 이렇게 동작하게 되는것이죠!
 
 ## 🤫 초기코드 살펴보기
+
 공식 자습서에서 설명하는 코드인 [여기](https://codepen.io/gaearon/pen/oWWQNa?editors=0010)에서 한번 코드를 살펴보도록 하겠습니다.
 
 `src/index`를 열어주세요
 
 코드를 살펴보면 세 가지의 React 컴포넌트를 확인할 수 있습니다.
+
 - Square
 - Board
 - Game
 
 `Square`컴포넌트는 button을 렌더링하고,
 
-`Board`컴포넌트는 사각형 9개를 렌더링합니다. 
+`Board`컴포넌트는 사각형 9개를 렌더링합니다.
 
-마지막으로 `Game` 컴포넌트는 게임판을 렌더링하며 나중에 수정할 자리 표시자 값을 가지고 있습니다. 
-
+마지막으로 `Game` 컴포넌트는 게임판을 렌더링하며 나중에 수정할 자리 표시자 값을 가지고 있습니다.
 
 ## Props를 통해 데이터 전달하기
 
@@ -139,18 +142,14 @@ class Board extends React.Component {
     return <Square value={i} />;
   }
 }
-``` 
+```
 
 이제 값을 표시하기 위해 render함수에서 {this.props.value}를 추가해줍시다!
 
 ```js
 class Square extends React.Component {
   render() {
-    return (
-      <button className="square">
-        {this.props.value}
-      </button>
-    );
+    return <button className="square">{this.props.value}</button>;
   }
 }
 ```
@@ -159,7 +158,7 @@ class Square extends React.Component {
 
 그럼 다음과 같이 각 Square에 value가 잘 전달된것을 볼 수 있습니다!
 
-이제 Props의 전달입니다! 
+이제 Props의 전달입니다!
 
 `Board`컴포넌트에서 -> `Square`컴포넌트로 **부모 컴포넌트에서 자식 컴포넌트로** 값을 전달한것이지요!
 
@@ -175,9 +174,12 @@ class Square extends React.Component {
 class Square extends React.Component {
   render() {
     return (
-      <button className="square" onClick={() => {
+      <button
+        className="square"
+        onClick={() => {
           alert("click");
-        }}>
+        }}
+      >
         {this.props.value}
       </button>
     );
@@ -198,4 +200,164 @@ Square 컴포넌트를 클릭한 것을 **“기억하게”** 만들어 “X”
 무언가를 “기억하기”위해 component는 **state**를 사용합니다.
 
 새로운 개념이 나왔습니다! **state**
+
+클래스형 컴포넌트는 `this.state`로 접근할 수 있습니다.
+
+한번 예제를 볼까요?
+
+```js
+class Square extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      value: null,
+    };
+  }
+
+  render() {
+    return (
+      <button className="square" onClick={() => alert("click")}>
+        {this.props.value}
+      </button>
+    );
+  }
+}
+```
+
+생성자 (constructor)를 이용해서 state를 초기화합니다.
+
+> # JavaScript클래스 super
+>
+> JavaScript 클래스에서 하위 클래스의 생성자를 정의할 때 항상 super를 호출해야 합니다. 즉 모든 리액트 컴포넌트는 React.Component 클래스를 상속받으므로 `super(props)`을 반드시 작성해야 합니다.
+
+이제 클릭하면 박스안에 값이 X로 바뀌게 구현해보겠습니다.
+
+이제 setState를 통해 state를 업데이트 해주도록 하겠습니다.
+
+```js
+render() {
+    return (
+      <button className="square" onClick={() => {
+          this.setState({
+            value: 'x'
+          })
+        }}>
+        {this.state.value}
+      </button>
+    );
+  }
+```
+
+이렇게 되면 다음과 같이 누르면 X가 잘 업데이트가 될겁니다.
+
+![image](https://user-images.githubusercontent.com/48292190/116779507-7f809a80-aab1-11eb-8911-8ec9bd52d63b.png)
+
+여기서 setState되는 과정이 이해를 못하실 수도 있습니다. 하지만 걱정하지 마세요. 나중에 더 자세히 설명해드리겠습니다.
+
+이제 해야할 작업이 무엇일까요?
+
+# 🙆‍♂️ 게임 완성하기
+
+> 완전한 게임을 위해 게임판의 “X”와 “O”를 번갈아 표시할 필요가 있으며 승자를 결정하는 방법이 필요합니다.
+
+차근차근 해보도록 하겠습니다.
+
+각 Square가 아닌 부모 Board 컴포넌트에 게임의 상태를 저장하는 것이 가장 좋은 방법입니다.
+
+Board컴포넌트에 생성자를 추가하고 9개의 사각형에 9개의 null배열을 초기 state로 설정을 해주세요.
+
+```js
+class Board extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      squares: Array(9).fill(null),
+    };
+  }
+
+  renderSquare(i) {
+    return <Square value={i} />;
+  }
+```
+
+그러면 나중에 Board를 채울때 다음과 같은 배열의 형태일것입니다.
+
+```js
+["O", null, "X", "X", "X", "O", "O", null, null];
+```
+
+현재 renderSquare의 상태는
+
+```js
+ renderSquare(i) {
+    return <Square value={i} />;
+  }
+```
+
+다음과 같은 형태일텐데, 이를 수정해주어야합니다.
+
+```js
+  renderSquare(i) {
+    return <Square value={this.state.squares[i]}/>;
+  }
+```
+
+그러면 이제 위에서 생성자를 이용해서 선언했던 state의 null값이 정상적으로 들어갔을겁니다.
+
+> Square는 이제 빈 사각형에 'X', 'O', 또는 null인 value prop을 받습니다.
+
+Board에서 Square로 함수를 전달하고 Square는 사각형을 클릭할 때 함수를 호출할 것입니다.
+
+다음과 같이 작성해주세요.
+
+```js
+renderSquare(i) {
+    return (
+      <Square
+        value={this.state.squares[i]}
+        onClick={() => this.handleClick(i)}
+      />
+    );
+  }
+```
+
+이제 Board에서 `Square`로 `value`와 onClick 두 개의 props를 전달하였습니다.
+
+```js
+class Square extends React.Component {
+  render() {
+    return (
+      <button className="square" onClick={() => this.props.onClick()}>
+        {this.props.value}
+      </button>
+    );
+  }
+}
+```
+
+그러면 Square컴포넌트는 이렇게 수정하면 됩니다.
+`constructor`가 없어졌는데, props로 값을 받기때문에 `constructor`의 필요성이 없어진 것입니다.
+
+그리고 `onClick`에 전달해준 `handleClick`이라는 함수는 아직 정의해주지 않았으니, 이제 차차 해보도록 하겠습니다.
+
+> 지금은 "this.handleClick is not a function"이라는 문구가 뜰 것입니다.
+
+> # 이벤트 이름 작성 팁
+>
+> React에서 이벤트를 나타내는 prop에는 on[Event], 이벤트를 처리하는 함수에는 handle[Event]를 사용하는 것이 일반적입니다.
+
+```js
+handleClick(i) {
+    const squares = this.state.squares.slice();
+    squares[i] = 'X';
+    this.setState({squares: squares});
+  }
+```
+
+이제 실행결과를 확인해보면 원래 작업과 동일하다는걸 알 수 있을겁니다. 
+하지만 다른점은 **부모 컴포넌트에서 값을 관리한다는 것이죠.**
+
+로직이 이해안되는 사람들이 있을겁니다...! 하지만 한번 알아보도록 하죠.
+
+
 
