@@ -539,3 +539,127 @@ if (winner) {
 
 하지만 해야할 작업이 아직 더 남아있습니다.
 
+누군가가 승리하거나 Square가 이미 채워졌다면 Board의 handleClick 함수가 클릭을 무시하도록 해야합니다.
+
+그럴려면 조건문을 하나 더 만들어야겠죠?
+
+`handleClick`함수를 다음과 같이 수정해주세요.
+
+```js
+handleClick(i) {
+    const squares = this.state.squares.slice();
+    if(calculateWinner(squares) || squares[i]){
+      return ;
+    }
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    this.setState({
+      squares: squares,
+      xIsNext: !this.state.xIsNext,
+    });
+  }
+```
+
+그러면 누군가가 승리하거나 Square가 이미 채워졌다면 Board의 handleClick 함수가 클릭을 무시되게 할 수 있습니다.
+
+# 🥳 축하해요! 틱택토 게임을 만들었어요!
+
+하지만 여기서 더 멋있는 기능을 구현해보도록 해보죠! 바로 `시간여행`이라는 기능입니다. 경기에서 이전 차례로 “시간여행”을 만들겠습니다.
+
+# 시간 여행 추가하기
+
+이 기능은 불변성을 유지하지 않고 구현했다면 어려웠을 겁니다. 하지만 우리는 불변성을 유지해주었기 때문에 기록을 남길 수 있는것이죠.
+(조금 햇갈릴 수 있습니다. 하지만 천천히 따라와보도록 합시다.)
+
+**과거의 squares 배열들을 history라는 다른 배열에 저장할 것입니다.**
+
+즉 **history배열은 게임의 모든 정보가 포함되어 있는것이죠.**
+
+`Board`컴포넌트의 생성자를 다음과 같이 수정해주세요.
+
+```js
+  constructor(props){
+    super(props)
+    this.state = {
+      history : [{
+          squares : Array(9).fill(null),
+      }],
+      xIsNext : true
+    }
+  }
+```
+
+오류가 날겁니다. 이제 하나하나 수정해보도록 하죠.
+
+Game 컴포넌트에서 Board 컴포넌트로 squares와 onClick props를 전달하겠습니다. 그러면 생성자가 Board에는 필요가 없겠죠?
+
+- constructor를 Board에서 제거해주세요.
+
+- Board의 renderSquare 안의 this.state.squares[i]를 this.props.squares[i]로 바꿔주세요.
+
+- Board의 renderSquare 안의 this.handleClick(i)을 this.props.onClick(i)으로 바꿔주세요.
+
+그렇게 하게되면 Board컴포넌트는 다음과 같은 코드형식일겁니다.
+
+```js
+class Board extends React.Component {
+  handleClick(i) {
+    const squares = this.state.squares.slice();
+    if (calculateWinner(squares) || squares[i]) {
+      return;
+    }
+    squares[i] = this.state.xIsNext ? "X" : "O";
+    this.setState({
+      squares: squares,
+      xIsNext: !this.state.xIsNext,
+    });
+  }
+
+  renderSquare(i) {
+    return (
+      <Square
+        value={this.props.squares[i]}
+        onClick={() => this.props.onClick(i)}
+      />
+    );
+  }
+
+  render() {
+    let status;
+    const winner = calculateWinner(this.state.squares);
+
+    if (winner) {
+      status = "Winner" + winner;
+    } else {
+      status = "Next Player" + (this.state.xIsNext ? "X" : "O");
+    }
+
+    return (
+      <div>
+        <div className="status">{status}</div>
+        <div className="board-row">
+          {this.renderSquare(0)}
+          {this.renderSquare(1)}
+          {this.renderSquare(2)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(3)}
+          {this.renderSquare(4)}
+          {this.renderSquare(5)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(6)}
+          {this.renderSquare(7)}
+          {this.renderSquare(8)}
+        </div>
+      </div>
+    );
+  }
+}
+```
+
+Board컴포넌트에서
+
+```html
+<div className="status">{status}</div>
+```
+이 부분을 지워주세요.
