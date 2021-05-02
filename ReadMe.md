@@ -437,6 +437,7 @@ function Square(props) {
   );
 }
 ```
+
 그 다음 이것이 함수형으로 작성한 컴포넌트입니다.
 
 **코드가 훨씬 깔끔하죠?**
@@ -444,4 +445,44 @@ function Square(props) {
 잘 보시면 `this`가 없어졌습니다.
 
 > Square를 함수 컴포넌트로 수정했을 때 onClick={() => this.props.onClick()}을 onClick={props.onClick}로 간결하게 작성했습니다. 양쪽 모두 괄호가 사라진 것에 주목해주세요.
+
+# 순서 만들기
+
+우리가 틱택토 게임을 만들때 X만 표시되었었죠? 하지만 O도 표시되게 하기위해서 로직을 좀 더 수정해야 합니다.
+
+첫번째 차례를 X로 하겠습니다. 아래의 코드를 집중해주세요.
+
+```js
+class Board extends React.Component {
+  constructor(props){
+    super(props)
+    this.state = {
+      squares : Array(9).fill(null),
+      xIsNext : true
+    }
+  }
+```
+조건부 연산을 위한 xIsNext라는 state를 선언해주세요.
+
+그리고 handleClick을 조금 수정해주도록 하겠습니다.
+
+```js
+    handleClick(i) {
+    const squares = this.state.squares.slice();
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    this.setState({
+      squares: squares,
+      xIsNext: !this.state.xIsNext,
+    });
+  }
+```
+이러면 xIsNext가 toggle(번갈아서)되므로 X,O가 반복되는 모습을 볼 수 있습니다.
+
+**Board의 render 안에 있는 “status” 텍스트도 바꿔서 어느 플레이어가 다음 차례인지 알려주겠습니다.**
+
+state변수를 다음과 같이 수정해주세요.
+
+```js
+const status = `Next player : ${this.state.xIsNext ? "X" : "O"}`;
+```
 
