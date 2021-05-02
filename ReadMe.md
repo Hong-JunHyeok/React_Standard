@@ -860,7 +860,7 @@ const desc = move ? "Go to move #" + move : "Go to game start";
 
 위 코드는 map함수에서 두번째 파라미터로 index라는 값을 전달해주는데, 이는 0부터 시작해서 함수의 length - 1까지 주어지는 값입니다. 즉 index가 0이라면 조건부를 통해서 처음 시작인지 아닌지를 판별하는 것이지요.
 
-자 그럼, 오류를 해결해볼까요?
+자 오류를 한번 볼까요?
 
 **Warning: Each child in a list should have a unique "key" prop.**라고 하네요!
 
@@ -907,5 +907,223 @@ key가 정확이 무엇이고 어떤 역할을 하는 속성일까요?
 
 React는 자동으로 key를 어떤 컴포넌트를 업데이트 할 지 판단하는 데에 사용합니다. 컴포넌트는 key를 조회할 수 없습니다.
 
-React 개발자피셜 : "동적인 리스트를 만들 때마다 적절한 키를 할당할 것을 강력하게 추천합니다. 적절한 키가 없는 경우 데이터 재구성을 고려해 볼 수 있습니다."
+React 개발자피셜 : **"동적인 리스트를 만들 때마다 적절한 키를 할당할 것을 강력하게 추천합니다. 적절한 키가 없는 경우 데이터 재구성을 고려해 볼 수 있습니다."**
+
+아까 오류부터 해결해볼까요?
+
+틱택토 게임의 기록에서 과거의 이동 정보는 이동의 순차적인 숫자를 고유한 ID로 가졌습니다. 이동은 순서가 바뀌거나 삭제되거나 중간에 삽입될 수 없기 때문에 이동의 인덱스를 키로 사용해도 안전합니다.
+
+다음과 같이 코드를 작성하면 오류는 없어질것입니다.
+
+```js
+const moves = history.map((step, move) => {
+  const desc = move ? "Go to move #" + move : "Go to game start";
+  return (
+    <li key={move}>
+      <button onClick={() => this.jumpTo(move)}>{desc}</button>
+    </li>
+  );
+});
+```
+
+# ⌚️ 시간 여행 구현하기
+
+이제 버튼을 클릭하면 그 step으로 돌아가는 기능을 구현해보도록 할까요?
+
+지금은 눌러도 아무런 기능을 하지 못합니다.오히여 오류가 날겁니다. 왜냐하면 구현을 안해놨거든요!
+
+state를 하나 더 만들어볼까요?
+
+stepNumber: 0를 하나 선언해주세요!
+
+```js
+class Game extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      history: [{
+        squares: Array(9).fill(null),
+      }],
+      stepNumber: 0,
+      xIsNext: true,
+    };
+  }
+```
+
+그 다음 `jumpTo`를 선언해주세요
+
+```js
+  jumpTo(step) {
+    this.setState({
+      stepNumber: step,
+      xIsNext: (step % 2) === 0,
+    });
+  }
+```
+
+로직에 대해서 이야기를 좀 해볼까요?
+이 jumpTo는
+
+![image](https://user-images.githubusercontent.com/48292190/116811509-bbd0fb00-ab84-11eb-81ce-8af7854c0be4.png)
+
+다음 버튼이 클릭되었을때 실행할 함수입니다.
+
+클릭이 되면 setState를 진행하는데, stepNumber를 클릭한 step으로 설정하고, xIsNext를 해당 step의 값으로 바꾸어줍니다.
+
+이제 handleClick을 조금 수정할 차례입니다.
+
+**stepNumber state는 현재 사용자에게 표시되는 이동을 반영합니다.**
+
+`stepNumber: history.length`를 추가해서 `stepNumber`를 업데이트 해야합니다.
+
+최종 코드입니다.
+
+```js
+function Square(props) {
+  return (
+    <button className="square" onClick={props.onClick}>
+      {props.value}
+    </button>
+  );
+}
+
+class Board extends React.Component {
+  renderSquare(i) {
+    return (
+      <Square
+        value={this.props.squares[i]}
+        onClick={() => this.props.onClick(i)}
+      />
+    );
+  }
+
+  render() {
+    return (
+      <div>
+        <div className="board-row">
+          {this.renderSquare(0)}
+          {this.renderSquare(1)}
+          {this.renderSquare(2)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(3)}
+          {this.renderSquare(4)}
+          {this.renderSquare(5)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(6)}
+          {this.renderSquare(7)}
+          {this.renderSquare(8)}
+        </div>
+      </div>
+    );
+  }
+}
+
+class Game extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      history: [
+        {
+          squares: Array(9).fill(null),
+        },
+      ],
+      stepNumber: 0,
+      xIsNext: true,
+    };
+  }
+
+  handleClick(i) {
+    const history = this.state.history.slice(0, this.state.stepNumber + 1);
+    const current = history[history.length - 1];
+    const squares = current.squares.slice();
+    if (calculateWinner(squares) || squares[i]) {
+      return;
+    }
+    squares[i] = this.state.xIsNext ? "X" : "O";
+    this.setState({
+      history: history.concat([
+        {
+          squares: squares,
+        },
+      ]),
+      stepNumber: history.length,
+      xIsNext: !this.state.xIsNext,
+    });
+  }
+
+  jumpTo(step) {
+    this.setState({
+      stepNumber: step,
+      xIsNext: step % 2 === 0,
+    });
+  }
+
+  render() {
+    const history = this.state.history;
+    const current = history[this.state.stepNumber];
+    const winner = calculateWinner(current.squares);
+
+    const moves = history.map((step, move) => {
+      const desc = move ? "Go to move #" + move : "Go to game start";
+      return (
+        <li key={move}>
+          <button onClick={() => this.jumpTo(move)}>{desc}</button>
+        </li>
+      );
+    });
+
+    let status;
+    if (winner) {
+      status = "Winner: " + winner;
+    } else {
+      status = "Next player: " + (this.state.xIsNext ? "X" : "O");
+    }
+
+    return (
+      <div className="game">
+        <div className="game-board">
+          <Board
+            squares={current.squares}
+            onClick={(i) => this.handleClick(i)}
+          />
+        </div>
+        <div className="game-info">
+          <div>{status}</div>
+          <ol>{moves}</ol>
+        </div>
+      </div>
+    );
+  }
+}
+
+// ========================================
+
+ReactDOM.render(<Game />, document.getElementById("root"));
+
+function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+  return null;
+}
+```
+
+
+# 🎊 축하합니다! 틱택토 게임을 만드셨군요!
+이제 리액트의 기술을 조금 터득했을 거라고 믿습니다! 지금까지 정말 수고하셨습니다.
 
