@@ -822,3 +822,90 @@ function calculateWinner(squares) {
   return null;
 }
 ```
+
+# 🚙 과거의 이동 표시하기
+
+이제 틱택토게임은 플레이어의 행동 하나하나를 기록하고있기 때문에 과거의 이동 행적을 표시할 수 있습니다.
+
+JavaScript에서 배열은 데이터를 다른 데이터와 함께 매핑할 때 사용하는 **map()** 함수를 가지고 있습니다.
+
+map의 사용벙을 알아보도록 합시다.
+
+```js
+const arr = [1, 2, 3, 4];
+const mapArr = arr.map((element) => element * 2);
+console.log(mapArr); //2,4,6,8
+```
+
+**map 함수를 사용하여 이동 기록을 화면에 표시되는 React 버튼 엘리먼트로 맵핑할 수 있으며 과거의 이동으로 “돌아가는” 버튼 목록을 표시할 수 있습니다.**
+
+```js
+const moves = history.map((step, move) => {
+  const desc = move ? "Go to move #" + move : "Go to game start";
+  return (
+    <li>
+      <button onClick={() => this.jumpTo(move)}>{desc}</button>
+    </li>
+  );
+});
+```
+
+![image](https://user-images.githubusercontent.com/48292190/116808497-12820900-ab74-11eb-8ef4-43fb1f3da7ac.png)
+
+오류가 나지만 정상적으로 버튼이 랜더링 되는 모습을 볼 수 있죠?
+
+```js
+const desc = move ? "Go to move #" + move : "Go to game start";
+```
+
+위 코드는 map함수에서 두번째 파라미터로 index라는 값을 전달해주는데, 이는 0부터 시작해서 함수의 length - 1까지 주어지는 값입니다. 즉 index가 0이라면 조건부를 통해서 처음 시작인지 아닌지를 판별하는 것이지요.
+
+자 그럼, 오류를 해결해볼까요?
+
+**Warning: Each child in a list should have a unique "key" prop.**라고 하네요!
+
+> **경고: 배열이나 이터레이터의 자식들은 고유의 “key” prop을 가지고 있어야 합니다.**
+
+key가 정확이 무엇이고 어떤 역할을 하는 속성일까요?
+
+리스트를 렌더링할 때 React는 렌더링하는 리스트 아이템들에 대한 정보를 저장합니다. **리스트를 업데이트 할 때 React는 무엇이 변했는 지 결정해야 합니다**. 리스트의 아이템들은 추가, 제거, 재배열, 업데이트 될 수 있습니다.
+
+위의 코드가
+
+```jsx
+<li>Alexa: 7 tasks left</li>
+<li>Ben: 5 tasks left</li>
+```
+
+아래와 같이 바뀐다고 생각해봅시다.
+
+```jsx
+<li>Ben: 9 tasks left</li>
+<li>Claudia: 8 tasks left</li>
+<li>Alexa: 5 tasks left</li>
+```
+
+프로그래머의 눈에는 task 개수가 업데이트되었을 뿐만 아니라 Alexa와 Ben의 순서가 바뀌고 Claudia가 두 사람 사이에 추가되었다고 생각할 것입니다. 하지만 우리가 집중해야하는건 **React의 프로그램입니다.**
+
+리액트는 우리의 시각과 달리 프로그래머가 의도한 바가 무엇인지 알지 못합니다.
+
+그렇기 때문에 key를 지정해줌으로써 각 리스트는 다른 리스트들과는 다르다는걸 알려주어야합니다.
+
+아래와 같은 형식으로 말이죠.
+
+```jsx
+<li key={user.id}>
+  {user.name}: {user.taskCount} tasks left
+</li>
+```
+
+그러면 우리가 React에게 각 리스트가 다르다는걸 알려줄 필요가 있을까요?
+
+목록을 다시 렌더링하면 React는 각 리스트 아이템의 키를 가져가며 이전 리스트 아이템에서 일치하는 키를 탐색합니다. 현재 리스트에서 이전에 존재하지 않는 키를 가지고 있다면 React는 새로운 컴포넌트를 생성합니다.
+
+**키는 각 컴포넌트를 구별할 수 있도록 하여 React에게 다시 렌더링할 때 state를 유지할 수 있게 합니다. 만약 컴포넌트의 키가 변한다면 컴포넌트는 제거되고 새로운 state와 함께 다시 생성됩니다.**
+
+React는 자동으로 key를 어떤 컴포넌트를 업데이트 할 지 판단하는 데에 사용합니다. 컴포넌트는 key를 조회할 수 없습니다.
+
+React 개발자피셜 : "동적인 리스트를 만들 때마다 적절한 키를 할당할 것을 강력하게 추천합니다. 적절한 키가 없는 경우 데이터 재구성을 고려해 볼 수 있습니다."
+
