@@ -462,6 +462,7 @@ class Board extends React.Component {
     }
   }
 ```
+
 조건부 연산을 위한 xIsNext라는 state를 선언해주세요.
 
 그리고 handleClick을 조금 수정해주도록 하겠습니다.
@@ -476,6 +477,7 @@ class Board extends React.Component {
     });
   }
 ```
+
 이러면 xIsNext가 toggle(번갈아서)되므로 X,O가 반복되는 모습을 볼 수 있습니다.
 
 **Board의 render 안에 있는 “status” 텍스트도 바꿔서 어느 플레이어가 다음 차례인지 알려주겠습니다.**
@@ -485,4 +487,55 @@ state변수를 다음과 같이 수정해주세요.
 ```js
 const status = `Next player : ${this.state.xIsNext ? "X" : "O"}`;
 ```
+
+# 승자 결정하기
+
+이전 코드에서는 누가 다음에 둬야할지 구현했다면 이제 우리가 할 작업은 승부가 나는 때와 더이상 둘 곳이 없을때를 알려주어야합니다.
+
+그럴려면 약간의 알고리즘? 이 필요한데 아래의 코드를 보도록 하죠.
+
+```js
+function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+  return null;
+}
+```
+
+위 함수가 승자판별을 위한 함수입니다.
+
+lines의 경우의 수를 탐색해서 누가 승자인지 판별하는 것이지요.
+
+이제 어떤식으로 `calculateWinner`를 사용하는지 볼까요?
+
+```js
+let status;
+const winner = calculateWinner(this.state.squares);
+
+if (winner) {
+  status = "Winner" + winner;
+} else {
+  status = "Next Player" + (this.state.xIsNext ? "X" : "O");
+}
+```
+
+이러고 화면을 보면 정상적으로 Winner가 뜨는것을 볼 수 있습니다.
+
+![image](https://user-images.githubusercontent.com/48292190/116800460-39bce400-ab3c-11eb-93f3-5afbb36c6450.png)
+
+하지만 해야할 작업이 아직 더 남아있습니다.
 
