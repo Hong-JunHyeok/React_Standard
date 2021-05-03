@@ -652,3 +652,52 @@ this.setState((state, props) => ({
 ![image](https://media.vlpt.us/images/daybreak/post/4dfb762a-30f3-48ed-a380-4260f8c7e39f/%E1%84%89%E1%85%B3%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%AB%E1%84%89%E1%85%A3%E1%86%BA%202020-07-09%2016.39.35.png)
 
 이 부분 정확히 짚고 넘어가주세요!
+
+# State 업데이트는 병합됩니다
+
+`setState()`를 호출할 때 React는 제공한 객체를 현재 state로 병합합니다.
+
+```js
+  constructor(props) {
+    super(props);
+    this.state = {
+      posts: [],
+      comments: []
+    };
+  }
+```
+
+다양한 독립적인 변수를 선언할 수 있습니다.
+
+```js
+  componentDidMount() {
+    fetchPosts().then(response => {
+      this.setState({
+        posts: response.posts
+      });
+    });
+
+    fetchComments().then(response => {
+      this.setState({
+        comments: response.comments
+      });
+    });
+  }
+```
+
+**this.setState({comments})는 this.state.posts에 영향을 주진 않지만 this.state.comments는 완전히 대체됩니다.**
+
+# 데이터는 아래로 흐릅니다.
+
+컴포넌트는 자신의 state를 자식 컴포넌트에 props로 전달할 수 있습니다.
+
+```js
+<FormattedDate date={this.state.date} />
+```
+
+> FormattedDate 컴포넌트는 date를 자신의 props로 받을 것이고 이것이 Clock의 state로부터 왔는지, Clock의 props에서 왔는지, 수동으로 입력한 것인지 알지 못합니다.
+
+**트리구조가 props들의 폭포라고 상상하면 각 컴포넌트의 state는 임의의 점에서 만나지만 동시에 아래로 흐르는 부가적인 수원(water source)이라고 할 수 있습니다.**
+
+
+
