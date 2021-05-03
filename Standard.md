@@ -266,5 +266,353 @@ class Welcome extends React.Component {
 ```
 
 Class형에는 몇 가지 추가기능이 있습니다.
-**함수 컴포넌트와 클래스 컴포넌트 둘 다 몇 가지 추가 기능이 있으며** 이에 대해서는 다음 장에서 설명합니다.
+**함수 컴포넌트와 클래스 컴포넌트 둘 다 몇 가지 추가 기능이 있으며** 이에 대해서는 다음에 자세히 설명하겠습니다.
+
+# 컴포넌트 렌더링
+
+React 엘리먼트는 사용자 정의 컴포넌트로 나타낼 수 있습니다.
+
+```js
+const element = <Welcome name="Sara" />;
+```
+
+`name="Sara"`라고 된 부분이 있죠? 그 부분을 우리가 **props를 전달한다** 라고 합니다.
+
+즉, props를 전달함으로서 다음과 같은 로직이 가능한것이죠.
+
+```js
+function Welcome(props) {
+  return <h1>Hello, {props.name}</h1>;
+}
+
+const element = <Welcome name="Sara" />;
+ReactDOM.render(element, document.getElementById("root"));
+```
+
+# 컴포넌트 합성
+
+컴포넌트는 자신의 출력에 다른 컴포넌트를 참조할 수 있습니다.
+
+```js
+function Welcome(props) {
+  return <h1>Hello, {props.name}</h1>;
+}
+
+function App() {
+  return (
+    <div>
+      <Welcome name="Sara" />
+      <Welcome name="Cahal" />
+      <Welcome name="Edite" />
+    </div>
+  );
+}
+
+ReactDOM.render(<App />, document.getElementById("root"));
+```
+
+React 앱에서는 버튼, 폼, 다이얼로그, 화면 등의 모든 것들이 흔히 컴포넌트로 표현됩니다.
+
+# 컴포넌트 추출
+
+컴포넌트를 추출하는 과정은 컴포넌트를 여러 개의 작은 컴포넌트로 나누는 과정을 의미합니다.
+
+이 과정을 과감히 해버리세요! 다음 코드를 봅시다.
+
+```js
+function Comment(props) {
+  return (
+    <div className="Comment">
+      <div className="UserInfo">
+        <img
+          className="Avatar"
+          src={props.author.avatarUrl}
+          alt={props.author.name}
+        />
+        <div className="UserInfo-name">{props.author.name}</div>
+      </div>
+      <div className="Comment-text">{props.text}</div>
+      <div className="Comment-date">{formatDate(props.date)}</div>
+    </div>
+  );
+}
+```
+
+음... 이게 React를 쓰는건지 HTML을 쓰는건지 잘 모르시겠죠?
+
+그래서 컴포넌트를 추출하는 과정을 통해 좀 더 직관적인 코드로 변경해보겠습니다.
+
+img태그부터 추출해보겠습니다.
+
+```js
+function Avatar(props) {
+  return (
+    <img className="Avatar" src={props.user.avatarUrl} alt={props.user.name} />
+  );
+}
+```
+
+그러면 Comment코드상에선,
+
+```js
+function Comment(props) {
+  return (
+    <div className="Comment">
+      <div className="UserInfo">
+        <Avatar user={props.author} />
+        <div className="UserInfo-name">{props.author.name}</div>
+      </div>
+      <div className="Comment-text">{props.text}</div>
+      <div className="Comment-date">{formatDate(props.date)}</div>
+    </div>
+  );
+}
+```
+
+이렇게 치환될 수 있겠죠.
+
+그 다음 UserInfo컴포넌트도 만들어 보겠습니다.
+
+```js
+function UserInfo(props) {
+  return (
+    <div className="UserInfo">
+      <Avatar user={props.user} />
+      <div className="UserInfo-name">{props.user.name}</div>
+    </div>
+  );
+}
+```
+
+이제 Comment가 더욱 단순해질 수 있겠죠?
+
+```js
+function Comment(props) {
+  return (
+    <div className="Comment">
+      <UserInfo user={props.author} />
+      <div className="Comment-text">{props.text}</div>
+      <div className="Comment-date">{formatDate(props.date)}</div>
+    </div>
+  );
+}
+```
+
+이 작업이 굉장히 귀찮고 지루할 수 있습니다. 하지만 재사용 가능한 컴포넌트를 만들어 놓는 것은 더 큰 앱에서 작업할 때 두각을 나타냅니다.
+
+**UI 일부가 여러 번 사용되거나 (Button, Panel, Avatar), UI 일부가 자체적으로 복잡한 (App, FeedStory, Comment) 경우에는 별도의 컴포넌트로 만드는 게 좋습니다.**
+
+![image](https://media.vlpt.us/images/devgosunman/post/f0f69596-9dc9-4533-ba90-e12fd55a8c62/react%20state.jpg)
+
+# props는 읽기 전용입니다.
+
+무슨 말인지 한번 볼까요?
+
+```js
+function sum(a, b) {
+  return a + b;
+}
+```
+
+위의 함수는 **순수 함수**라고 합니다.
+
+순수 함수에 대해서는 [여기](https://velog.io/@chdb57/%E3%85%87%E3%85%87%E3%85%87%E3%85%87%E3%85%87%E3%85%87%E3%85%87%E3%85%87)를 참조해보시길 바랍니다.
+
+**모든 React 컴포넌트는 자신의 props를 다룰 때 반드시 순수 함수처럼 동작해야 합니다.**
+
+애플리케이션 UI는 동적이며 시간에 따라 변합니다. 그래서 위 규칙을 위반하지 않고 사용자 액션, 네트워크 응답 및 다른 요소에 대한 응답으로 시간에 따라 자신의 출력값을 변경할 수 있는 방법은 `State`입니다.
+
+이제 자세히 한번 알아보도록 할까요?
+
+![image](https://blog.kakaocdn.net/dn/b7Ing6/btqDrkNbvBs/Mi1pUyMUSRYYLmE6zvjAG0/img.png)
+
+# State and Lifecycle
+
+이전에 째깍거리는 시계를 랜더링 한거 기억나시죠? 출력값을 변경하기 위해서 새로 엘리먼트를 랜더링하는 작업을 해주었습니다.
+
+```js
+ReactDOM.render();
+```
+
+일단 `Clock`이라는 컴포넌트를 만들어서 캡슐화를 진행해줍시다.
+
+```js
+function Clock(props) {
+  return (
+    <div>
+      <h1>Hello, world!</h1>
+      <h2>It is {props.date.toLocaleTimeString()}.</h2>
+    </div>
+  );
+}
+
+function tick() {
+  ReactDOM.render(<Clock date={new Date()} />, document.getElementById("root"));
+}
+
+setInterval(tick, 1000);
+```
+
+이렇게 진행하면 되겠죠?
+
+하지만 우리가 구현하고 싶은건
+
+```js
+ReactDOM.render(<Clock />, document.getElementById("root"));
+```
+
+딱 이코드 한번만 실행하고 싶습니다.
+
+이럴때 `state`를 사용해야 할 차례입니다.
+
+**State는 props와 유사하지만, 비공개이며 컴포넌트에 의해 완전히 제어됩니다.**
+
+# 함수에서 클래스로 변환하기
+
+state를 사용할려면 class형 컴포넌트를 사용해야 합니다.function형 컴포넌트에는 state를 사용할 수 없습니다. (React hooks를 쓰면 그게 가능해집니다.)
+
+다음 코드를 한번 살펴볼까요?
+
+```js
+class Clock extends React.Component {
+  render() {
+    return (
+      <div>
+        <h1>Hello, world!</h1>
+        <h2>It is {this.props.date.toLocaleTimeString()}.</h2>
+      </div>
+    );
+  }
+}
+function tick() {
+  ReactDOM.render(<Clock date={new Date()} />, document.getElementById("root"));
+}
+
+setInterval(tick, 1000);
+```
+
+이러면 함수형 컴포넌트를 클래스형 컴포넌트로 변환이 완료되었습니다.
+
+# 클래스에 로컬 State 추가하기
+
+class형 컴포넌트에 constructor를 정의해 주신다음에 다음과 같은 코드를 작성해주세요.
+
+```js
+  constructor(props) {
+    super(props);
+    this.state = {date: new Date()};
+  }
+```
+
+이 과정이 state를 선언하는 과정입니다.
+super(props)이 부분은 모든 class형 컴포넌트는 super(props)를 해주어야 합니다. (상속되어지는 관계이기 때문이죠)
+
+그 다음 this.state = {...} 이 부분이 state를 선언하는 부분입니다.
+
+date라는 속성에 new Date()를 하게 됨으로써 현제 시간을 data라는 state에 담게 되는것이죠.
+
+**최종 코드는 다음과 같습니다.**
+
+```js
+class Clock extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { date: new Date() };
+  }
+
+  render() {
+    return (
+      <div>
+        <h1>Hello, world!</h1>
+        <h2>It is {this.state.date.toLocaleTimeString()}.</h2>
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(<Clock />, document.getElementById("root"));
+```
+
+하지만 실행해보면 안움직이죠?
+
+당연합니다! **왜냐하면 매초 스스로 움직이라는 코드를 작성하지 않았으니까요!**
+
+한번 해보도록 하겠습니다.
+
+# 생명주기 메서드를 클래스에 추가하기
+
+Clock이 처음 DOM에 랜더링 될때마다 타이머를 설정할려고 합니다.
+또한 DOM이 삭제될때마다 타이머를 해제할려고 합니다.
+
+여기, 좋은 기능이 있습니다.
+
+```js
+  componentDidMount() {
+  }
+
+  componentWillUnmount() {
+  }
+```
+
+이 기능을 사용하면 쉽게 랜더링 될 때, 삭제될 때를 확보할 수 있습니다.
+
+이러한 메서드들을 **생명주기 메서드라고 합니다.**
+
+```js
+class Clock extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { date: new Date() };
+  }
+
+  componentDidMount() {
+    this.timerID = setInterval(() => this.tick(), 1000);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.timerID);
+  }
+
+  tick() {
+    this.setState({
+      date: new Date(),
+    });
+  }
+
+  render() {
+    return (
+      <div>
+        <h1>Hello, world!</h1>
+        <h2>It is {this.state.date.toLocaleTimeString()}.</h2>
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(<Clock />, document.getElementById("root"));
+```
+
+다음과 같이 작성해주세요.
+
+코드가 이해가지 않는 분들을 위한 설명타임이 있겠습니다.
+
+`componentDidMount`는 컴포넌트가 랜더링 될 시기를 의미합니다.
+그러면
+
+```js
+componentDidMount() {
+    this.timerID = setInterval(() => this.tick(), 1000);
+  }
+```
+
+다음과 같은 코드는 **컴포넌트가 마운트 될 때 매초 tick이라는 함수를 실행한다는 의미입니다.**
+
+`componentWillUnmount`는 컴포넌트가 삭제될 시기를 의미합니다.
+
+```js
+componentWillUnmount() {
+    clearInterval(this.timerID);
+  }
+```
+다음과 같은 코드는 interval된 타이머 함수를 컴포넌트가 삭제될 때 제거하겠다는 의미입니다.
 
