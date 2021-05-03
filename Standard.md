@@ -2,10 +2,6 @@
 
 > ### ⚠️ 이 글은 React.js 공식 자습서에 의존하고 있는 글입니다.
 
-TicTacToe를 만들때에는 `Class`형 컴포넌트를 사용했다면 이번 기초예제는 `Function`형 컴포넌트를 사용해볼려고 합니다.
-
-최근에는 Function형 컴포넌트가 많이 쓰이고 있으니 천천히 배워보도록 하겠습니다.
-
 <hr />
 
 # 목차
@@ -1458,5 +1454,287 @@ setTimeout(function () {
 
 **위 코드는 첫 번째 입력은 잠겨있지만 1초 후 입력이 가능해집니다.**
 
+# State 끌어올리기
 
+![image](https://user-images.githubusercontent.com/48292190/116857141-4bcf7d00-ac37-11eb-8ab4-4b753b17af9c.png)
+
+> ⚠️ 이 파트는 어려운 여정이 될수도 있습니다. 정신 바짝차리고 따라오세요.
+
+**이번 섹션에서는 주어진 온도에서 물의 끓는 여부를 추정하는 온도 계산기를 만들어볼 것입니다.**
+
+먼저 `BoilingVerdict`이라는 컴포넌트부터 만들어봅시다.
+
+**이 컴포넌트는 섭씨온도를 의미하는 celsius prop를 받아서 이 온도가 물이 끓기에 충분한지 여부를 출력합니다.**
+
+```js
+function BoilingVerdict(props) {
+  if (props.celsius >= 100) {
+    return <p>The water would boil.</p>;
+  }
+  return <p>The water would not boil.</p>;
+}
+```
+
+그 다음 `Calculator`라는 컴포넌트도 하나 만들어보도록 하겠습니다.
+
+**이 컴포넌트는 온도를 입력할 수 있는 `<input>`을 렌더링하고 그 값을 this.state.temperature에 저장합니다.**
+
+```js
+class Calculator extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleChange = this.handleChange.bind(this);
+    this.state = { temperature: "" };
+  }
+
+  handleChange(e) {
+    this.setState({ temperature: e.target.value });
+  }
+
+  render() {
+    const temperature = this.state.temperature;
+    return (
+      <fieldset>
+        <legend>Enter temperature in Celsius:</legend>
+        <input value={temperature} onChange={this.handleChange} />
+        <BoilingVerdict celsius={parseFloat(temperature)} />
+      </fieldset>
+    );
+  }
+}
+```
+
+이제 렌더링된 화면을 보도록 하겠습니다.
+
+![image](https://user-images.githubusercontent.com/48292190/116857877-7a9a2300-ac38-11eb-827a-5e9fcd473273.png)
+
+_100도가 넘어가면 자동으로 렌더링 되는 모습을 볼 수 있죠?_
+
+# 두 번째 Input 추가하기
+
+이제 화씨 입력칸도 만들어야하기 때문에 Calculator에서 TemperatureInput라는 컴포넌트를 만들어서 위로 올리는 작업을 해주어야 합니다.
+
+다음과 같이 TemperatureInput에 로직들을 올려주고, Calculator에서 두개의 TemperatureInput을 랜더링 시켜줍시다.
+
+```js
+const scaleNames = {
+  c: "Celsius",
+  f: "Fahrenheit",
+};
+
+class TemperatureInput extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleChange = this.handleChange.bind(this);
+    this.state = { temperature: "" };
+  }
+
+  handleChange(e) {
+    this.setState({ temperature: e.target.value });
+  }
+
+  render() {
+    const temperature = this.state.temperature;
+    const scale = this.props.scale;
+    return (
+      <fieldset>
+        <legend>Enter temperature in {scaleNames[scale]}:</legend>
+        <input value={temperature} onChange={this.handleChange} />
+      </fieldset>
+    );
+  }
+}
+
+function BoilingVerdict(props) {
+  if (props.celsius >= 100) {
+    return <p>The water would boil.</p>;
+  }
+  return <p>The water would not boil.</p>;
+}
+
+class Calculator extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleChange = this.handleChange.bind(this);
+    this.state = { temperature: "" };
+  }
+
+  handleChange(e) {
+    this.setState({ temperature: e.target.value });
+  }
+
+  render() {
+    const temperature = this.state.temperature;
+    return (
+      <div>
+        <TemperatureInput scale="c" />
+        <TemperatureInput scale="f" />
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(<Calculator />, document.getElementById("root"));
+```
+
+그러면 화면에 input 컴포넌트가 2개가 나올겁니다.
+
+![image](https://user-images.githubusercontent.com/48292190/116858378-3bb89d00-ac39-11eb-8e66-b23f42869d52.png)
+
+둘 중 하나에 온도를 입력하더라도 다른 하나는 갱신되지 않는 문제가 있습니다.
+
+이제 하나하나 개발해봅시다.
+
+# 변환 함수 작성하기
+
+섭씨를 화씨로, 또는 그 반대로 변환해주는 함수를 작성해보겠습니다.
+
+```js
+function toCelsius(fahrenheit) {
+  return ((fahrenheit - 32) * 5) / 9;
+}
+
+function toFahrenheit(celsius) {
+  return (celsius * 9) / 5 + 32;
+}
+```
+
+다음은 공식입니다.
+
+두 함수는 공식을 반환합니다.
+
+이제 temperature 문자열과 변환 함수를 인수로 취해서 문자열을 반환하는 또 다른 함수를 작성해보겠습니다
+
+```js
+function tryConvert(temperature, convert) {
+  const input = parseFloat(temperature);
+  if (Number.isNaN(input)) {
+    return "";
+  }
+  const output = convert(input);
+  const rounded = Math.round(output * 1000) / 1000;
+  return rounded.toString();
+}
+```
+
+> 예를 들어 tryConvert('abc', toCelsius)는 빈 문자열을 반환하고 tryConvert('10.22', toFahrenheit)는 '50.396'을 반환합니다.
+
+# State 끌어올리기
+
+우리는 두 입력값이 서로의 것과 동기화된 상태로 있길 원합니다. 섭씨온도 입력값을 변경할 경우 화씨온도 입력값 역시 변환된 온도를 반영할 수 있어야 하며, 그 반대의 경우에도 마찬가지여야 합니다.
+
+**React에서 state를 공유하는 일은 그 값을 필요로 하는 컴포넌트 간의 가장 가까운 공통 조상으로 state를 끌어올림으로써 이뤄낼 수 있습니다.**
+
+```js
+const scaleNames = {
+  c: "Celsius",
+  f: "Fahrenheit",
+};
+
+function toCelsius(fahrenheit) {
+  return ((fahrenheit - 32) * 5) / 9;
+}
+
+function toFahrenheit(celsius) {
+  return (celsius * 9) / 5 + 32;
+}
+
+function tryConvert(temperature, convert) {
+  const input = parseFloat(temperature);
+  if (Number.isNaN(input)) {
+    return "";
+  }
+  const output = convert(input);
+  const rounded = Math.round(output * 1000) / 1000;
+  return rounded.toString();
+}
+
+function BoilingVerdict(props) {
+  if (props.celsius >= 100) {
+    return <p>The water would boil.</p>;
+  }
+  return <p>The water would not boil.</p>;
+}
+
+class TemperatureInput extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  handleChange(e) {
+    this.props.onTemperatureChange(e.target.value);
+  }
+
+  render() {
+    const temperature = this.props.temperature;
+    const scale = this.props.scale;
+    return (
+      <fieldset>
+        <legend>Enter temperature in {scaleNames[scale]}:</legend>
+        <input value={temperature} onChange={this.handleChange} />
+      </fieldset>
+    );
+  }
+}
+
+class Calculator extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleCelsiusChange = this.handleCelsiusChange.bind(this);
+    this.handleFahrenheitChange = this.handleFahrenheitChange.bind(this);
+    this.state = { temperature: "", scale: "c" };
+  }
+
+  handleCelsiusChange(temperature) {
+    this.setState({ scale: "c", temperature });
+  }
+
+  handleFahrenheitChange(temperature) {
+    this.setState({ scale: "f", temperature });
+  }
+
+  render() {
+    const scale = this.state.scale;
+    const temperature = this.state.temperature;
+    const celsius =
+      scale === "f" ? tryConvert(temperature, toCelsius) : temperature;
+    const fahrenheit =
+      scale === "c" ? tryConvert(temperature, toFahrenheit) : temperature;
+
+    return (
+      <div>
+        <TemperatureInput
+          scale="c"
+          temperature={celsius}
+          onTemperatureChange={this.handleCelsiusChange}
+        />
+        <TemperatureInput
+          scale="f"
+          temperature={fahrenheit}
+          onTemperatureChange={this.handleFahrenheitChange}
+        />
+        <BoilingVerdict celsius={parseFloat(celsius)} />
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(<Calculator />, document.getElementById("root"));
+```
+
+완성된 최종 코드입니다.
+
+이제 대충 리액트에 대한 전반적인 느낌은 가지고 계시겠죠?
+
+이제 여러분들이 해야할 것은 
+
+# 리액트로 사고하기 입니다.
+
+[이 링크](https://ko.reactjs.org/docs/thinking-in-react.html)로 가셔서 리액트로 사고하는 방법을 좀 더 연구해보세요! 
+
+# 수고하셨습니다! 
+![image](https://i.pinimg.com/originals/a1/7c/c1/a17cc10c65943d6b1f319b72aa4aa1d5.gif)
+
+이제 여러분은 간단한 리액트 개념에 대해서 알아보았습니다! 
 
