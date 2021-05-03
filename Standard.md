@@ -178,7 +178,7 @@ const element = {
 > 이쯤되면 **컴포넌트**와 **엘리먼트**가 햇갈릴 수 있습니다.
 > 엘리먼트는 컴포넌트의 “구성 요소”입니다. 자세한 설명은 다음장에 계속 설명하겠습니다.
 
-# DOM에 엘리먼트 렌더링하기
+## DOM에 엘리먼트 렌더링하기
 
 HTML파일 어딘가에 <div>가 있다고 생각해봅시다.
 
@@ -197,11 +197,11 @@ const element = <h1>Hello, world</h1>;
 ReactDOM.render(element, document.getElementById("root"));
 ```
 
-# 렌더링 된 엘리먼트 업데이트하기
+## 렌더링 된 엘리먼트 업데이트하기
 
 React 엘리먼트는 **불변객체**입니다.
 
-**불변객체** 이부분이 중요한 부분입니다.
+**불변객체**... 이부분이 중요한 부분입니다.
 
 엘리먼트를 생성한 이후에는 해당 엘리먼트의 자식이나 속성을 변경할 수 없습니다. 엘리먼트는 영화에서 하나의 프레임과 같이 특정 시점의 UI를 보여줍니다.
 
@@ -225,7 +225,8 @@ setInterval(tick, 1000);
 
 > 실제로 대부분의 React 앱은 ReactDOM.render()를 한 번만 호출합니다.
 
-# 변경된 부분만 업데이트하기
+## 변경된 부분만 업데이트하기
+
 > React DOM은 해당 엘리먼트와 그 자식 엘리먼트를 이전의 엘리먼트와 비교하고 DOM을 원하는 상태로 만드는데 필요한 경우에만 DOM을 업데이트합니다.
 
 이 말이 무슨말이냐면 "변경된 부분만 업데이트"하는 것입니다.
@@ -233,4 +234,37 @@ setInterval(tick, 1000);
 ![gif](https://ko.reactjs.org/c158617ed7cc0eac8f58330e49e48224/granular-dom-updates.gif)
 
 매초 전체 UI를 다시 그리도록 엘리먼트를 만들었지만 React DOM은 내용이 변경된 텍스트 노드만 업데이트했습니다.
+
+# Components and Props
+
+컴포넌트의 개념을 설명해보도록 하겠습니다.
+
+**컴포넌트는 JavaScript 함수와 유사합니다. “props”라고 하는 임의의 입력을 받은 후, 화면에 어떻게 표시되는지를 기술하는 React 엘리먼트를 반환합니다.**
+
+## 함수 컴포넌트와 클래스 컴포넌트
+
+컴포넌트를 정의하는 가장 간단한 방법은 JavaScript함수를 사용하는 것입니다.
+
+```js
+function SimpleComponent(props) {
+  return <h1>Hello Function Component, I am {props.name}</h1>;
+}
+```
+
+이 함수는 데이터를 가진 props (props는 속성을 나타내는 데이터입니다)라는 객체 인자를 받은 후, React엘리먼트를 반환합니다.
+
+**이것이 함수형 컴포넌트입니다.**
+
+ES6 Class문법을 사용하여 클래스형 컴포넌트도 정의할 수 있습니다.
+
+```js
+class Welcome extends React.Component {
+  render() {
+    return <h1>Hello, {this.props.name}</h1>;
+  }
+}
+```
+
+Class형에는 몇 가지 추가기능이 있습니다.
+**함수 컴포넌트와 클래스 컴포넌트 둘 다 몇 가지 추가 기능이 있으며** 이에 대해서는 다음 장에서 설명합니다.
 
