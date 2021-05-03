@@ -614,5 +614,41 @@ componentWillUnmount() {
     clearInterval(this.timerID);
   }
 ```
+
 다음과 같은 코드는 interval된 타이머 함수를 컴포넌트가 삭제될 때 제거하겠다는 의미입니다.
 
+# State 업데이트는 비동기적일 수도 있습니다.
+
+이 부분에서 state사용에 오류가 나는 경우가 많이 있습니다.
+
+this.props와 this.state가 비동기적으로 업데이트될 수 있기 때문에 다음 state를 계산할 때 해당 값에 의존해서는 안 됩니다.
+
+예를 한번 들어볼까요?
+
+```js
+// Wrong
+this.setState({
+  counter: this.state.counter + this.props.increment,
+});
+```
+
+이 업데이트는 실패할 수 있습니다.
+
+이를 수정하기 위해 객체보다는 함수를 인자로 사용하는 다른 형태의 setState()를 사용합니다. 그 함수는 이전 state를 첫 번째 인자로 받아들일 것이고, 업데이트가 적용된 시점의 props를 두 번째 인자로 받아들일 것입니다.
+
+즉, 다음 형식으로 작성하면 됩니다.
+
+```js
+// Correct
+this.setState((state, props) => ({
+  counter: state.counter + props.increment,
+}));
+```
+
+이전 state와 업데이트가 적용된 props를 받고 진행을 할겁니다.
+
+> 물론 화살표 함수 말고 그냥 function키워드 함수도 가능합니다.
+
+![image](https://media.vlpt.us/images/daybreak/post/4dfb762a-30f3-48ed-a380-4260f8c7e39f/%E1%84%89%E1%85%B3%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%AB%E1%84%89%E1%85%A3%E1%86%BA%202020-07-09%2016.39.35.png)
+
+이 부분 정확히 짚고 넘어가주세요!
