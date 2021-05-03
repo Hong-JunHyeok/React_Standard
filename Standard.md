@@ -1364,3 +1364,99 @@ class FlavorForm extends React.Component {
 
 ![image](https://user-images.githubusercontent.com/48292190/116849907-9a2a4f00-ac2a-11eb-8719-49bef877e570.png)
 
+# file input 태그
+
+```js
+<input type="file" />
+```
+
+값이 읽기 전용이기 때문에 React에서는 비제어 컴포넌트입니다.
+
+# 다중 입력 제어하기
+
+여러 input 엘리먼트를 제어해야할 때, 각 엘리먼트에 name 어트리뷰트를 추가하고 event.target.name 값을 통해 핸들러가 어떤 작업을 할 지 선택할 수 있게 해줍니다.
+
+```js
+class Reservation extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isGoing: true,
+      numberOfGuests: 2,
+    };
+
+    this.handleInputChange = this.handleInputChange.bind(this);
+  }
+
+  handleInputChange(event) {
+    const target = event.target;
+    const value = target.type === "checkbox" ? target.checked : target.value;
+    const name = target.name;
+
+    this.setState({
+      [name]: value,
+    });
+  }
+
+  render() {
+    return (
+      <form>
+        <label>
+          Is going:
+          <input
+            name="isGoing"
+            type="checkbox"
+            checked={this.state.isGoing}
+            onChange={this.handleInputChange}
+          />
+        </label>
+        <br />
+        <label>
+          Number of guests:
+          <input
+            name="numberOfGuests"
+            type="number"
+            value={this.state.numberOfGuests}
+            onChange={this.handleInputChange}
+          />
+        </label>
+      </form>
+    );
+  }
+}
+```
+
+`computed property name`를 사용해서 더욱 간단하게 state를 업데이트를 할 수 있습니다.
+
+```js
+this.setState({
+  [name]: value,
+});
+```
+
+computed property name를 사용하지 않는다면 코드의 양이 길어질 겁니다.
+
+```js
+var partialState = {};
+partialState[name] = value;
+this.setState(partialState);
+```
+
+> setState()는 자동적으로 현재 state에 일부 state를 병합하기 때문에 바뀐 부분에 대해서만 호출하면 됩니다.
+
+# 제어되는 Input Null 값
+
+value prop을 지정하면 의도하지 않는 한 사용자가 변경할 수 없습니다. value를 설정했는데 여전히 수정할 수 있다면 실수로 value를 undefined나 null로 설정했을 수 있습니다.
+
+```js
+ReactDOM.render(<input value="hi" />, mountNode);
+
+setTimeout(function () {
+  ReactDOM.render(<input value={null} />, mountNode);
+}, 1000);
+```
+
+**위 코드는 첫 번째 입력은 잠겨있지만 1초 후 입력이 가능해집니다.**
+
+
+
