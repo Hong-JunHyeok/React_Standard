@@ -699,5 +699,96 @@ this.setState((state, props) => ({
 
 **트리구조가 props들의 폭포라고 상상하면 각 컴포넌트의 state는 임의의 점에서 만나지만 동시에 아래로 흐르는 부가적인 수원(water source)이라고 할 수 있습니다.**
 
+# 이벤트 처리하기 🎪
 
+React에서 이벤트를 처리하는 방식은 DOM엘리먼트에서 이벤트를 처리하는 방식과 거의 동일합니다.
 
+단, 문법적 차이가 있습니다.
+
+- React의 이벤트는 소문자 대신 캐멀 케이스(camelCase)를 사용합니다.
+- JSX를 사용하여 문자열이 아닌 함수로 이벤트 핸들러를 전달합니다.
+
+HTML에서 이벤트를 처리하는 방법은 다음과 같습니다.
+
+```html
+<button onclick="activateLasers()">Activate Lasers</button>
+```
+
+React에서는 조금 다른방식으로 처리합니다.
+
+```jsx
+<button onClick={activateLasers}>Activate Lasers</button>
+```
+
+또 다른 차이점으로, React에서는 false를 반환해도 기본 동작을 방지할 수 없습니다. 반드시 preventDefault를 명시적으로 호출해야 합니다.
+
+이게 무슨 말인지 이해가 되지 않는다면 다음의 코드를 살펴보세요.
+
+HTML에서 a태그의 새 페이지를 여는 동작을 방지하기 위해서 다음과 같이 씁니다.
+
+```html
+<a href="#" onclick="console.log('The link was clicked.'); return false">
+  Click me
+</a>
+```
+
+리액트에서는 return false를 한다고 해결되지 않습니다.
+
+```js
+function ActionLink() {
+  function handleClick(e) {
+    e.preventDefault();
+    console.log("The link was clicked.");
+  }
+
+  return (
+    <a href="#" onClick={handleClick}>
+      Click me
+    </a>
+  );
+}
+```
+
+`preventDefault()`라는 함수를 사용해서 **React 이벤트는 브라우저 고유 이벤트와 정확히 동일하게 동작하지는 않습니다.**
+
+또한 React에서 `addEventListener`를 사용할 필요가 없습니다.
+
+```js
+class Toggle extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { isToggleOn: true };
+
+    // 콜백에서 `this`가 작동하려면 아래와 같이 바인딩 해주어야 합니다.
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick() {
+    this.setState((state) => ({
+      isToggleOn: !state.isToggleOn,
+    }));
+  }
+
+  render() {
+    return (
+      <button onClick={this.handleClick}>
+        {this.state.isToggleOn ? "ON" : "OFF"}
+      </button>
+    );
+  }
+}
+
+ReactDOM.render(<Toggle />, document.getElementById("root"));
+```
+
+이렇게 작성하면 정삭적으로 onClick이 리스닝 됩니다.
+
+하지만 코드를 보면 조금 햇갈리는 부분이 있을겁니다.
+
+바로 `.bind`부분인데요.
+
+JSX콜백 안에서 this의 의미를 생각해 보아야합니다.
+
+**JavaScript에서 클래스 메서드는 기본적으로 바인딩되어 있지 않습니다**
+
+# 이벤트 핸들러에 인자 전달하기
