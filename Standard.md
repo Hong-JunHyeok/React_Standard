@@ -792,3 +792,215 @@ JSX콜백 안에서 this의 의미를 생각해 보아야합니다.
 **JavaScript에서 클래스 메서드는 기본적으로 바인딩되어 있지 않습니다**
 
 # 이벤트 핸들러에 인자 전달하기
+
+```js
+<button onClick={(e) => this.deleteRow(id, e)}>Delete Row</button>
+<button onClick={this.deleteRow.bind(this, id)}>Delete Row</button>
+```
+
+- 화살표 함수를 사용하면 event를 명시적으로 전달해 주어야하고,
+- bind를 하면 자동으로 event가 전달됩니다.
+
+# 조건부 렌더링
+
+React에서는 원하는 동작을 캡슐화하는 컴포넌트를 만들 수 있습니다.
+
+React에서 조건부 렌더링은 JavaScript에서의 조건 처리와 같이 동작합니다
+
+한번 보도록 할까요?
+
+로그인을 할 때 로그인 상태에 맞는 컴포넌트를 렌더링 해주어야 합니다.
+
+예를 들어서 밑에 두 컴포넌트가 있다고 해봅시다.
+
+```js
+function UserGreeting(props) {
+  return <h1>Welcome back!</h1>;
+}
+
+function GuestGreeting(props) {
+  return <h1>Please sign up.</h1>;
+}
+```
+
+그러면 로그인이 되었을때와 안되었을때를 나누어서 조건부 렌더링을 해야하죠?
+
+이제 그 방법을 살펴보도록 하겠습니다.
+
+```js
+function Greeting(props) {
+  const isLoggedIn = props.isLoggedIn;
+  if (isLoggedIn) {
+    return <UserGreeting />;
+  }
+  return <GuestGreeting />;
+}
+
+ReactDOM.render(
+  // Try changing to isLoggedIn={true}:
+  <Greeting isLoggedIn={false} />,
+  document.getElementById("root")
+);
+```
+
+props로 전달받은 isLoggedIn이라는 상태를 기반으로 `if`으로 조건부 렌더링을 하는 부분이 보이죠?
+
+```js
+if (isLoggedIn) {
+  return <UserGreeting />;
+}
+return <GuestGreeting />;
+```
+
+이부분을 유심히 봐주세요.
+
+**이 예시는 isLoggedIn prop에 따라서 다른 인사말을 렌더링 합니다.**
+
+컴포넌트 단위 말고도 엘리먼트 단위로도 구현할 수 있습니다.
+
+다음과 같은 컴포넌트가 있다고 생각해봅시다.
+
+```js
+function LoginButton(props) {
+  return <button onClick={props.onClick}>Login</button>;
+}
+
+function LogoutButton(props) {
+  return <button onClick={props.onClick}>Logout</button>;
+}
+```
+
+```js
+class LoginControl extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleLoginClick = this.handleLoginClick.bind(this);
+    this.handleLogoutClick = this.handleLogoutClick.bind(this);
+    this.state = { isLoggedIn: false };
+  }
+
+  handleLoginClick() {
+    this.setState({ isLoggedIn: true });
+  }
+
+  handleLogoutClick() {
+    this.setState({ isLoggedIn: false });
+  }
+
+  render() {
+    const isLoggedIn = this.state.isLoggedIn;
+    let button;
+    if (isLoggedIn) {
+      button = <LogoutButton onClick={this.handleLogoutClick} />;
+    } else {
+      button = <LoginButton onClick={this.handleLoginClick} />;
+    }
+
+    return (
+      <div>
+        <Greeting isLoggedIn={isLoggedIn} />
+        {button}
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(<LoginControl />, document.getElementById("root"));
+```
+
+이제 만들었던 컴포넌트를 이렇게 렌더링할 수 있습니다.
+
+여기서 if문을 사용해서 조건부 렌더링 해도 되지만, 다양한 방법을 사용해서 축약형으로 사용할 수 있습니다.
+
+# 논리 && 연산자로 If를 인라인으로 표현하기
+
+```js
+function Mailbox(props) {
+  const unreadMessages = props.unreadMessages;
+  return (
+    <div>
+      <h1>Hello!</h1>
+      {unreadMessages.length > 0 && (
+        <h2>You have {unreadMessages.length} unread messages.</h2>
+      )}
+    </div>
+  );
+}
+
+const messages = ["React", "Re: React", "Re:Re: React"];
+ReactDOM.render(
+  <Mailbox unreadMessages={messages} />,
+  document.getElementById("root")
+);
+```
+
+> JavaScript에서 true && expression은 항상 expression으로 평가되고 false && expression은 항상 false로 평가됩니다.
+
+따라서 && 뒤의 엘리먼트는 조건이 true일때 출력이 됩니다. 조건이 false라면 React는 무시합니다.
+
+# 조건부 연산자로 If-Else구문 인라인으로 표현하기
+
+흔히 아는 삼항연산자를 사용해서 이를 더 축약할 수 있습니다.
+
+```js
+render() {
+  const isLoggedIn = this.state.isLoggedIn;
+  return (
+    <div>
+      The user is <b>{isLoggedIn ? 'currently' : 'not'}</b> logged in.
+    </div>
+  );
+}
+```
+
+이는 간단한 예시이지만, 나중에 조건이 많아지면 이 방법이 복잡할 수 있습니다.
+
+**JavaScript와 마찬가지로, 가독성이 좋다고 생각하는 방식을 선택하면 됩니다. 또한 조건이 너무 복잡하다면 컴포넌트를 분리하기 좋을 때 일 수도 있다는 것을 기억하세요.**
+
+# 컴포넌트가 렌더링하는 것을 막기
+
+저는 무슨 프로그램이는 최적화가 가장 중요하다고 생각합니다.
+
+이 부분은 최적화와 관련된 부분이므로 집중해서 공부해보겠습니다.
+
+아래의 예시에서는 <WarningBanner />가 warn prop의 값에 의해서 렌더링됩니다. prop이 false라면 컴포넌트는 렌더링하지 않게 됩니다.
+
+```js
+function WarningBanner(props) {
+  if (!props.warn) {
+    return null;
+  }
+
+  return <div className="warning">Warning!</div>;
+}
+
+class Page extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { showWarning: true };
+    this.handleToggleClick = this.handleToggleClick.bind(this);
+  }
+
+  handleToggleClick() {
+    this.setState((state) => ({
+      showWarning: !state.showWarning,
+    }));
+  }
+
+  render() {
+    return (
+      <div>
+        <WarningBanner warn={this.state.showWarning} />
+        <button onClick={this.handleToggleClick}>
+          {this.state.showWarning ? "Hide" : "Show"}
+        </button>
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(<Page />, document.getElementById("root"));
+```
+
+컴포넌트의 render 메서드로부터 null을 반환하는 것은 생명주기 메서드 호출에 영향을 주지 않습니다. 그 예로 componentDidUpdate는 계속해서 호출되게 됩니다.
+
