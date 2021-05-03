@@ -1004,3 +1004,89 @@ ReactDOM.render(<Page />, document.getElementById("root"));
 
 컴포넌트의 render 메서드로부터 null을 반환하는 것은 생명주기 메서드 호출에 영향을 주지 않습니다. 그 예로 componentDidUpdate는 계속해서 호출되게 됩니다.
 
+# 리스트와 Key
+
+먼저 JavaScript에서 리스트를 어떻게 변환하는지 살펴봅시다.
+
+TicTacToe를 구현하면서 key와 리스트 관련해서 이슈가 있었던 적이있죠?
+
+이번 챕터에서는 그걸 더 자세히 알아볼려고 해요.
+
+리액트에서 엘리먼트 리스트를 만드는 방법은 다음과 유사합니다.
+
+```js
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map((number) => number * 2);
+console.log(doubled); // [2, 4, 6, 8, 10]
+```
+
+- 여러개의 컴포넌트 렌더링하기
+
+```js
+const numbers = [1, 2, 3, 4, 5];
+const listItems = numbers.map((number) => <li>{number}</li>);
+```
+
+이러면 listItems는 다음과 같은 모습을 하고있을 겁니다.
+
+```html
+<li>1</li>
+<li>2</li>
+<li>3</li>
+<li>4</li>
+<li>5</li>
+```
+
+간단하죠?
+
+**일반적으로 컴포넌트 안에서 리스트를 렌더링합니다.**
+
+다음과 같이 작성합니다.
+
+```js
+function NumberList(props) {
+  const numbers = props.numbers;
+  const listItems = numbers.map((number) => <li>{number}</li>);
+  return <ul>{listItems}</ul>;
+}
+
+const numbers = [1, 2, 3, 4, 5];
+ReactDOM.render(
+  <NumberList numbers={numbers} />,
+  document.getElementById("root")
+);
+```
+
+자, 실행해보세요.
+
+오류가 뜨나요?
+
+코드를 위의 코드 그대로 쓴 게 맞다면, 오류뜨는게 정상입니다.
+![image](https://user-images.githubusercontent.com/48292190/116847416-6ef13100-ac25-11eb-9a79-ae3cd0c6873a.png)
+
+**리스트의 각 항목에 key를 넣어야 한다는 경고가 표시됩니다.**
+
+“key”는 엘리먼트 리스트를 만들 때 포함해야 하는 특수한 문자열 어트리뷰트입니다.
+
+key의 역할에 대해서는 다음에 더욱 자세히 설명해보죠.
+
+지금은 오류부터 해결해 보자구요.
+
+```js
+function NumberList(props) {
+  const numbers = props.numbers;
+  const listItems = numbers.map((number) => (
+    <li key={number}>{number}</li>
+  ));
+  return <ul>{listItems}</ul>;
+}
+
+const numbers = [1, 2, 3, 4, 5];
+ReactDOM.render(
+  <NumberList numbers={numbers} />,
+  document.getElementById("root")
+);
+```
+
+어때요 오류가 잘 없어졌나요?
+
