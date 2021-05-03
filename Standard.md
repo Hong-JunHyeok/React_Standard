@@ -1075,9 +1075,7 @@ key의 역할에 대해서는 다음에 더욱 자세히 설명해보죠.
 ```js
 function NumberList(props) {
   const numbers = props.numbers;
-  const listItems = numbers.map((number) => (
-    <li key={number}>{number}</li>
-  ));
+  const listItems = numbers.map((number) => <li key={number}>{number}</li>);
   return <ul>{listItems}</ul>;
 }
 
@@ -1090,3 +1088,137 @@ ReactDOM.render(
 
 어때요 오류가 잘 없어졌나요?
 
+# key
+
+이제 key가 하는 역할을 좀 더 자세히 알아보도록 하겠습니다.
+
+key는 일종의 식별하기 위한 속성입니다.
+
+어떤 항목을 변경, 추가 또는 삭제할지 식별하는 것을 돕습니다.
+
+Key를 선택하는 가장 좋은 방법은 리스트의 다른 항목들 사이에서 해당 항목을 고유하게 식별할 수 있는 문자열을 사용하는 것입니다. 대부분의 경우 데이터의 ID를 key로 사용합니다.
+
+**정말 만약에 데이터에 id항목이 없다면 최후의 수단으로 index를 사용할 수 있습니다.**
+
+```js
+const todoItems = todos.map((todo, index) => (
+  // Only do this if items have no stable IDs
+  <li key={index}>{todo.text}</li>
+));
+```
+
+권장하는 방법은 아니며, 이로 인해 성능이 저하되거나 컴포넌트의 state와 관련된 문제가 발생할 수 있습니다.
+
+**만약 리스트 항목에 명시적으로 key를 지정하지 않으면 React는 기본적으로 인덱스를 key로 사용합니다.**
+
+그래서 오류로만 끝나는 것이죠.
+
+다음은 잘못된 key의 사용법입니다.
+
+```js
+function ListItem(props) {
+  const value = props.value;
+  return (
+    // 틀렸습니다! 여기에는 key를 지정할 필요가 없습니다.
+    <li key={value.toString()}>{value}</li>
+  );
+}
+
+function NumberList(props) {
+  const numbers = props.numbers;
+  const listItems = numbers.map((number) => (
+    // 틀렸습니다! 여기에 key를 지정해야 합니다.
+    <ListItem value={number} />
+  ));
+  return <ul>{listItems}</ul>;
+}
+
+const numbers = [1, 2, 3, 4, 5];
+ReactDOM.render(
+  <NumberList numbers={numbers} />,
+  document.getElementById("root")
+);
+```
+
+다음은 key의 옳은 사용법입니다.
+
+```js
+function ListItem(props) {
+  // 맞습니다! 여기에는 key를 지정할 필요가 없습니다.
+  return <li>{props.value}</li>;
+}
+
+function NumberList(props) {
+  const numbers = props.numbers;
+  const listItems = numbers.map((number) => (
+    // 맞습니다! 배열 안에 key를 지정해야 합니다.
+    <ListItem key={number.toString()} value={number} />
+  ));
+  return <ul>{listItems}</ul>;
+}
+
+const numbers = [1, 2, 3, 4, 5];
+ReactDOM.render(
+  <NumberList numbers={numbers} />,
+  document.getElementById("root")
+);
+```
+
+감이 잡히시나요?
+
+# Key는 형제 사이에서만 고유한 값이어야 한다.
+
+이 부분은 코드를 보면 이해가 가실겁니다.
+
+```js
+function Blog(props) {
+  const sidebar = (
+    <ul>
+      {props.posts.map((post) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  );
+  const content = props.posts.map((post) => (
+    <div key={post.id}>
+      <h3>{post.title}</h3>
+      <p>{post.content}</p>
+    </div>
+  ));
+  return (
+    <div>
+      {sidebar}
+      <hr />
+      {content}
+    </div>
+  );
+}
+
+const posts = [
+  { id: 1, title: "Hello World", content: "Welcome to learning React!" },
+  { id: 2, title: "Installation", content: "You can install React from npm." },
+];
+ReactDOM.render(<Blog posts={posts} />, document.getElementById("root"));
+```
+
+post.id가 두번 사용되었는데 잘 실행됩니다.
+
+즉 여기서 알 수 있는 사실은,
+
+**Key는 배열 안에서 형제 사이에서 고유해야 하고 전체 범위에서 고유할 필요는 없습니다. 두 개의 다른 배열을 만들 때 동일한 key를 사용할 수 있습니다.**
+
+React에서 key는 힌트를 제공하지만 컴포넌트로 전달하지는 않습니다.
+
+즉, 컴포넌트에서 key에 접근할 수 없다는 것이지요.
+
+만약 다음과 같이 속성을 전달했다고 해봅시다.
+
+```js
+const content = posts.map((post) => (
+  <Post key={post.id} id={post.id} title={post.title} />
+));
+```
+
+그 다음 컴포넌트에서 props.key를 접근할려고 하면 읽을 수 없습니다.
+
+**이제 어느정도 key개념이 이해가 가시나요?**
